@@ -21,7 +21,9 @@
 ; variable/data section
 MY_ZEROPAGE: SECTION  SHORT         ; Insert here your data definition
 
-;Variables	
+;Variables
+
+;representaciones BCD	
 digito0 ds 1;	
 digito1 ds 1;	
 digito2 ds 1;
@@ -33,14 +35,16 @@ digito7 ds 1;
 digito8 ds 1;
 digito9 ds 1;
 
+;lo que se muestra en los 7 segmentos
 numero1 ds 1;
 numero2 ds 1;
 numero3 ds 1;
 numero4 ds 1;
 
-ciclo ds 1 ;
-contadorencendido ds 1;
-pulsadores ds 1;
+ciclo ds 1 ;				;para el delay del multiplexado
+contadorencendido ds 1;		;determina si el cronometro funciona o no
+puntito ds 1;
+contadorloopmux ds 1;
 
 ; code section
 MyCode:     SECTION
@@ -101,64 +105,74 @@ _Startup:
 			LDA #$0
 			STA numero4
 
-			;El controlador RTC, es posible habilitarlo con el bit4 = "1", los 4 bits menos significativos determinan el tiempo de interrupcion
+			;El controlador RTC, es posible habilitarlo con el bit4 = "1", los 4 bits menos
+			;significativos determinan el tiempo de interrupcion
 			;1111 = 1 seg
 			;1110 = 0.5 seg
 			;1101 = 0.1 seg
 			;1100 = 16 mseg .... etc.
-            LDA #%00011100
+            LDA #%00011111
             STA RTCSC
             
             ;El contador inicia apagado
             CLR contadorencendido
-        
+            CLR puntito
+
 mainLoop:
+			JSR botones ;evalua los switch
+			JSR multiplexado	;mostrar
 			
-			JSR botones
+			BRA    mainLoop
+
+
+multiplexado
 
 			LDA #%00000000
 			STA PTAD
-			LDX #digito0
+			LDX #digito0	;me ubico en la representacion del 0
 			TXA
-			ADD numero1
+			ADD numero1		;me desplazo hacia la representacion del numero que se quiere mostrar
 			TAX
 			LDA 0,x
-			STA PTBD
+			STA PTBD		;muestra la unidad de segundo
 			JSR delay
 
 			LDA #%0000001
 			STA PTAD
-			LDX #digito0
+			LDX #digito0	;me ubico en la representacion del 0
 			TXA
-			ADD numero2
+			ADD numero2		;me desplazo hacia la representacion del numero que se quiere mostrar
 			TAX
 			LDA 0,x
-			STA PTBD
+			STA PTBD		;muestra la decima de segundo
 			JSR delay
 	
 			LDA #%00000010
 			STA PTAD
-			LDX #digito0
+			LDX #digito0	;me ubico en la representacion del 0
 			TXA
-			ADD numero3
+			ADD numero3		;me desplazo hacia la representacion del numero que se quiere mostrar
 			TAX
 			LDA 0,x
-			INCA				;le suma un puntito
-			STA PTBD
+			LDX puntito
+			BEQ nopuntito
+			INCA			;le suma un puntito
+nopuntito	STA PTBD		;muestra la unidad de minuto
 			JSR delay
 	
 			LDA #%00000011
 			STA PTAD
-			LDX #digito0
+			LDX #digito0	;me ubico en la representacion del 0
 			TXA
-			ADD numero4
+			ADD numero4		;me desplazo hacia la representacion del numero que se quiere mostrar
 			TAX
 			LDA 0,x
-			STA PTBD
+			STA PTBD		;muestra la decima de minuto
 			JSR delay
 			
-            BRA    mainLoop
+            RTS
 
+;Velocidad del multiplexado
 delay:
 			LDA #1
 			STA ciclo
@@ -171,63 +185,89 @@ leep		DBNZX leep
 			DEC ciclo
 			BNE vol
 			RTS
+
+;Evaluacion de switch
 botones 
 	
-	LDA PTCD
+	LDA PTCD						;Recibe la entrada de los botones en PTCD
 
-	BRCLR 2,PTCD,iniciarcontador
-	BRCLR 3,PTCD,pausacontador
+	BRCLR 2,PTCD,iniciarcontador 	;si el bit2 de PTCD es 0 salta hacia iniciarcontador (BOTON INICIO)
+	BRCLR 3,PTCD,pausacontador		;si el bit3 de PTCD es 0 salta hacia pausacontador (BOTON PAUSA) 
 
-	RTS
+	RTS								; no se apreto ningun boton
 	
 iniciarcontador
-	BRCLR 3,PTCD,resetcontador
-	BSET 7,contadorencendido
+	BRCLR 3,PTCD,resetcontador		;si ademas del BOTON INICIO tambien esta activado el BOTON PAUSA va a resetcontador
+	BSET 7,contadorencendido		;habilita que se incremente la unidad de segundo
 	
 	RTS
 	
 pausacontador
-	BRCLR 2,PTCD,resetcontador
-	BCLR 7,contadorencendido
+	BRCLR 2,PTCD,resetcontador		;si ademas del BOTON PAUSA tambien esta activado el BOTON INICIO va a resetcontador
+	BCLR 7,contadorencendido		;deshabilita que se incremente la unidad de segundo
+	
 	RTS
 
+loopmux								;pausa, muestra y grita
+	BSET 0,PTCD
+	JSR delay
+	BCLR 0,PTCD
+	JSR multiplexado
+	LDA contadorloopmux
+	CMP #$FF						;tiempo que tarda el loop
+	BEQ volver
+	INCA
+	JSR loopmux
+	
+volver RTS
+
+
 resetcontador
-	clr numero1
+	clr numero1						;se setean los 4 numeros en cero
 	clr numero2
 	clr numero3
 	clr numero4
-	BCLR 7,contadorencendido
-	
+	BCLR 7,contadorencendido		;se deshabilita que se incremente la unidad de segundo
+	JSR loopmux						;pausa momentaneamente la lectura de los switch
 	RTS
 
 
 interrupcion 
-	BSET 7,RTCSC
-	BRCLR 7,contadorencendido,fin
-	INC numero1
+	BSET 7,RTCSC					;resetea el contador del rct
+	BRCLR 7,contadorencendido,fin	;chequea si la cuenta esta habilitada o no
+	
+	INC puntito						;para que el punto parpadee con cada segundo
+	LDA puntito
+	CMP #$02
+	BNE numeritos
+	CLR puntito
+	
+numeritos
+
+	INC numero1						;Cada vez que se realice la interrupcion la unidad de segundo incrementa 1
 	LDA numero1
-	CMP #$A			;Si el numero es igual a 10 debe reiniciarse 
-	BNE fin			;De lo contrario debe es un numero permitido y termina la instruccion
+	CMP #$A							;Si el numero menos significativo es igual a 10 debe reiniciarse y afectar al numero siguiente
+	BNE fin							;De lo contrario debe es un numero permitido y termina la interrupcion					
 	CLR numero1
-	INC numero2
+	INC numero2						;La decima de segundo incrementa 1
 	LDA numero2
-	CMP #$6
-	BNE fin
+	CMP #$6							;Si el numero2 es igual a 6 debe reiniciarse y afectar al numero siguiente
+	BNE fin							;De lo contrario debe es un numero permitido y termina la interrupcion
 	CLR numero2
-	INC numero3
+	INC numero3						;La unidad de minuto incrementa 1
 	LDA numero3
-	CMP #$A
-	BNE fin
+	CMP #$A							;Si el numero3 es igual a 10 debe reiniciarse y afectar al numero siguiente
+	BNE fin							;De lo contrario debe es un numero permitido y termina la interrupcion
 	CLR numero3
-	INC numero4
+	INC numero4						;La decima de minuto incrementa 1
 	LDA numero4
-	CMP #$6
-	BNE fin
+	CMP #$6							;Si el numero3 es igual a 6 debe reiniciarse
+	BNE fin							;De lo contrario debe es un numero permitido y termina la interrupcion
 	CLR numero4
 	
 fin	RTI
 
-	
+;ubicacion de la interrupcion en RAM -------????????????? CREO NO SE	
 	org Vrtc
 	dcw interrupcion
 	
