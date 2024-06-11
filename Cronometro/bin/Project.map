@@ -17,27 +17,27 @@ main.asm.o                              Model: SMALL,         Lang: Assembler
 *********************************************************************************************
 STARTUP SECTION
 ---------------------------------------------------------------------------------------------
-Entry point: 0xE000 (_Startup)
+Entry point: 0xE00A (_Startup)
 
 *********************************************************************************************
 SECTION-ALLOCATION SECTION
 Section Name                    Size  Type     From       To       Segment
 ---------------------------------------------------------------------------------------------
-.init                            299     R     0xE000     0xE12A   ROM
-MY_ZEROPAGE                       18   R/W       0x80       0x91   Z_RAM
+.init                            274     R     0xE000     0xE111   ROM
+MY_ZEROPAGE                        8   R/W       0x80       0x87   Z_RAM
 main.asm__ORG00001                 2     R     0xFFCC     0xFFCD   .absSeg0
 .stack                            64   R/W      0x100      0x13F   RAM
 .vectSeg1_vect                     2     R     0xFFFE     0xFFFF   .vectSeg1
 
 Summary of section sizes per section type:
-READ_ONLY (R):         12F (dec:      303)
-READ_WRITE (R/W):       52 (dec:       82)
+READ_ONLY (R):         116 (dec:      278)
+READ_WRITE (R/W):       48 (dec:       72)
 
 *********************************************************************************************
 VECTOR-ALLOCATION SECTION
     Address     InitValue   InitFunction
 ---------------------------------------------------------------------------------------------
-     0xFFFE        0xE000   _Startup
+     0xFFFE        0xE00A   _Startup
 
 *********************************************************************************************
 OBJECT-ALLOCATION SECTION
@@ -45,40 +45,42 @@ OBJECT-ALLOCATION SECTION
 ---------------------------------------------------------------------------------------------
 MODULE:                 -- main.asm.o --
 - PROCEDURES:
-     _Startup                                  E000      59      89       0   .init       
-     main                                      E000       0       0       0   .init       
-     mainLoop                                  E059      33      51       0   .init       
-     nopuntito                                 E08C      17      23       0   .init       
-     delay                                     E0A3       4       4       4   .init       
-     vol                                       E0A7      10      16       0   .init       
-     leep                                      E0B7       9       9       0   .init       
-     botones                                   E0C0       9       9       1   .init       
-     iniciarcontador                           E0C9       6       6       0   .init       
-     pausacontador                             E0CF      1C      28       0   .init       
-     NOSUMA                                    E0EB       1       1       0   .init       
-     resetcontador                             E0EC       B      11       0   .init       
-     interrupcion                              E0F7       B      11       1   .init       
-     numeritos                                 E102      28      40       0   .init       
-     fin                                       E12A       1       1       0   .init       
+     digito0                                   E000       1       1       4   .init       
+     digito1                                   E001       1       1       0   .init       
+     digito2                                   E002       1       1       0   .init       
+     digito3                                   E003       1       1       0   .init       
+     digito4                                   E004       1       1       0   .init       
+     digito5                                   E005       1       1       0   .init       
+     digito6                                   E006       1       1       0   .init       
+     digito7                                   E007       1       1       0   .init       
+     digito8                                   E008       1       1       0   .init       
+     digito9                                   E009       1       1       0   .init       
+     _Startup                                  E00A      29      41       0   .init       
+     main                                      E00A       0       0       0   .init       
+     mainLoop                                  E033       8       8       0   .init       
+     multiplexado                              E03B      33      51       2   .init       
+     nopuntito                                 E06E      17      23       0   .init       
+     delay                                     E085       4       4       5   .init       
+     vol                                       E089      10      16       0   .init       
+     leep                                      E099       9       9       0   .init       
+     botones                                   E0A2       9       9       1   .init       
+     iniciarcontador                           E0AB       6       6       0   .init       
+     pausacontador                             E0B1       6       6       0   .init       
+     loopmux                                   E0B7      14      20       2   .init       
+     volver                                    E0CB       1       1       0   .init       
+     resetcontador                             E0CC       E      14       0   .init       
+     interrupcion                              E0DA       F      15       1   .init       
+     numeritos                                 E0E9      28      40       0   .init       
+     fin                                       E111       1       1       0   .init       
 - VARIABLES:
-     digito0                                     80       1       1       5   MY_ZEROPAGE 
-     digito1                                     81       1       1       1   MY_ZEROPAGE 
-     digito2                                     82       1       1       1   MY_ZEROPAGE 
-     digito3                                     83       1       1       1   MY_ZEROPAGE 
-     digito4                                     84       1       1       1   MY_ZEROPAGE 
-     digito5                                     85       1       1       1   MY_ZEROPAGE 
-     digito6                                     86       1       1       1   MY_ZEROPAGE 
-     digito7                                     87       1       1       1   MY_ZEROPAGE 
-     digito8                                     88       1       1       1   MY_ZEROPAGE 
-     digito9                                     89       1       1       1   MY_ZEROPAGE 
-     numero1                                     8A       1       1       6   MY_ZEROPAGE 
-     numero2                                     8B       1       1       6   MY_ZEROPAGE 
-     numero3                                     8C       1       1       9   MY_ZEROPAGE 
-     numero4                                     8D       1       1       9   MY_ZEROPAGE 
-     ciclo                                       8E       1       1       2   MY_ZEROPAGE 
-     contadorencendido                           8F       1       1       5   MY_ZEROPAGE 
-     pulsadores                                  90       1       1       0   MY_ZEROPAGE 
-     puntito                                     91       1       1       3   MY_ZEROPAGE 
+     numero1                                     80       1       1       6   MY_ZEROPAGE 
+     numero2                                     81       1       1       6   MY_ZEROPAGE 
+     numero3                                     82       1       1       6   MY_ZEROPAGE 
+     numero4                                     83       1       1       6   MY_ZEROPAGE 
+     ciclo                                       84       1       1       2   MY_ZEROPAGE 
+     contadorencendido                           85       1       1       5   MY_ZEROPAGE 
+     puntito                                     86       1       1       5   MY_ZEROPAGE 
+     contadorloopmux                             87       1       1       1   MY_ZEROPAGE 
      VAR00001                                  FFCC       2       2       0   .text       
 - LABELS:
      __SEG_END_SSTACK                           140       0       0       1               
@@ -87,7 +89,7 @@ MODULE:                 -- main.asm.o --
 MODULE STATISTIC
   Name                                      Data   Code  Const
 ---------------------------------------------------------------------------------------------
-  main.asm.o                                  18    299      2
+  main.asm.o                                   8    274      2
   other                                       64      2      0
 
 *********************************************************************************************
@@ -96,50 +98,53 @@ SECTION USE IN OBJECT-ALLOCATION SECTION
 SECTION: ".text"
   VAR00001 
 SECTION: ".init"
-  main _Startup mainLoop nopuntito delay vol leep botones iniciarcontador 
-  pausacontador NOSUMA resetcontador interrupcion numeritos fin 
-SECTION: "MY_ZEROPAGE"
   digito0 digito1 digito2 digito3 digito4 digito5 digito6 digito7 digito8 
-  digito9 numero1 numero2 numero3 numero4 ciclo contadorencendido pulsadores 
-  puntito 
+  digito9 main _Startup mainLoop multiplexado nopuntito delay vol leep botones 
+  iniciarcontador pausacontador loopmux volver resetcontador interrupcion 
+  numeritos fin 
+SECTION: "MY_ZEROPAGE"
+  numero1 numero2 numero3 numero4 ciclo contadorencendido puntito 
+  contadorloopmux 
 
 *********************************************************************************************
 OBJECT LIST SORTED BY ADDRESS
      Name                                      Addr   hSize   dSize     Ref    Section   RLIB
 ---------------------------------------------------------------------------------------------
-     digito0                                     80       1       1       5   MY_ZEROPAGE 
-     digito1                                     81       1       1       1   MY_ZEROPAGE 
-     digito2                                     82       1       1       1   MY_ZEROPAGE 
-     digito3                                     83       1       1       1   MY_ZEROPAGE 
-     digito4                                     84       1       1       1   MY_ZEROPAGE 
-     digito5                                     85       1       1       1   MY_ZEROPAGE 
-     digito6                                     86       1       1       1   MY_ZEROPAGE 
-     digito7                                     87       1       1       1   MY_ZEROPAGE 
-     digito8                                     88       1       1       1   MY_ZEROPAGE 
-     digito9                                     89       1       1       1   MY_ZEROPAGE 
-     numero1                                     8A       1       1       6   MY_ZEROPAGE 
-     numero2                                     8B       1       1       6   MY_ZEROPAGE 
-     numero3                                     8C       1       1       9   MY_ZEROPAGE 
-     numero4                                     8D       1       1       9   MY_ZEROPAGE 
-     ciclo                                       8E       1       1       2   MY_ZEROPAGE 
-     contadorencendido                           8F       1       1       5   MY_ZEROPAGE 
-     pulsadores                                  90       1       1       0   MY_ZEROPAGE 
-     puntito                                     91       1       1       3   MY_ZEROPAGE 
-     main                                      E000       0       0       0   .init       
-     _Startup                                  E000      59      89       0   .init       
-     mainLoop                                  E059      33      51       0   .init       
-     nopuntito                                 E08C      17      23       0   .init       
-     delay                                     E0A3       4       4       4   .init       
-     vol                                       E0A7      10      16       0   .init       
-     leep                                      E0B7       9       9       0   .init       
-     botones                                   E0C0       9       9       1   .init       
-     iniciarcontador                           E0C9       6       6       0   .init       
-     pausacontador                             E0CF      1C      28       0   .init       
-     NOSUMA                                    E0EB       1       1       0   .init       
-     resetcontador                             E0EC       B      11       0   .init       
-     interrupcion                              E0F7       B      11       1   .init       
-     numeritos                                 E102      28      40       0   .init       
-     fin                                       E12A       1       1       0   .init       
+     numero1                                     80       1       1       6   MY_ZEROPAGE 
+     numero2                                     81       1       1       6   MY_ZEROPAGE 
+     numero3                                     82       1       1       6   MY_ZEROPAGE 
+     numero4                                     83       1       1       6   MY_ZEROPAGE 
+     ciclo                                       84       1       1       2   MY_ZEROPAGE 
+     contadorencendido                           85       1       1       5   MY_ZEROPAGE 
+     puntito                                     86       1       1       5   MY_ZEROPAGE 
+     contadorloopmux                             87       1       1       1   MY_ZEROPAGE 
+     digito0                                   E000       1       1       4   .init       
+     digito1                                   E001       1       1       0   .init       
+     digito2                                   E002       1       1       0   .init       
+     digito3                                   E003       1       1       0   .init       
+     digito4                                   E004       1       1       0   .init       
+     digito5                                   E005       1       1       0   .init       
+     digito6                                   E006       1       1       0   .init       
+     digito7                                   E007       1       1       0   .init       
+     digito8                                   E008       1       1       0   .init       
+     digito9                                   E009       1       1       0   .init       
+     main                                      E00A       0       0       0   .init       
+     _Startup                                  E00A      29      41       0   .init       
+     mainLoop                                  E033       8       8       0   .init       
+     multiplexado                              E03B      33      51       2   .init       
+     nopuntito                                 E06E      17      23       0   .init       
+     delay                                     E085       4       4       5   .init       
+     vol                                       E089      10      16       0   .init       
+     leep                                      E099       9       9       0   .init       
+     botones                                   E0A2       9       9       1   .init       
+     iniciarcontador                           E0AB       6       6       0   .init       
+     pausacontador                             E0B1       6       6       0   .init       
+     loopmux                                   E0B7      14      20       2   .init       
+     volver                                    E0CB       1       1       0   .init       
+     resetcontador                             E0CC       E      14       0   .init       
+     interrupcion                              E0DA       F      15       1   .init       
+     numeritos                                 E0E9      28      40       0   .init       
+     fin                                       E111       1       1       0   .init       
      VAR00001                                  FFCC       2       2       0   .text       
 
 *********************************************************************************************
@@ -153,19 +158,18 @@ COPYDOWN SECTION
 *********************************************************************************************
 OBJECT-DEPENDENCIES SECTION
 ---------------------------------------------------------------------------------------------
-_Startup                  USES __SEG_END_SSTACK puntito digito0 digito1 
-                                digito2 digito3 digito4 digito5 digito6 digito7 
-                                digito8 digito9 numero1 numero2 numero3 numero4 
-                                contadorencendido 
-mainLoop                  USES botones digito0 numero1 delay numero2 numero3 
-                                puntito 
+_Startup                  USES __SEG_END_SSTACK numero1 numero2 numero3 
+                                numero4 contadorencendido puntito 
+mainLoop                  USES botones multiplexado 
+multiplexado              USES digito0 numero1 delay numero2 numero3 puntito 
 nopuntito                 USES delay digito0 numero4 
 delay                     USES ciclo 
 leep                      USES ciclo 
 iniciarcontador           USES contadorencendido 
-pausacontador             USES contadorencendido numero3 numero4 
+pausacontador             USES contadorencendido 
+loopmux                   USES delay multiplexado contadorloopmux loopmux 
 resetcontador             USES numero1 numero2 numero3 numero4 
-                                contadorencendido 
+                                contadorencendido loopmux 
 interrupcion              USES contadorencendido puntito 
 numeritos                 USES numero1 numero2 numero3 numero4 
 
@@ -189,5 +193,5 @@ STATISTIC SECTION
 ExeFile:
 --------
 Number of blocks to be downloaded: 3
-Total size of all blocks to be downloaded: 303
+Total size of all blocks to be downloaded: 278
 

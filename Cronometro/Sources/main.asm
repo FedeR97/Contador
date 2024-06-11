@@ -23,31 +23,32 @@ MY_ZEROPAGE: SECTION  SHORT         ; Insert here your data definition
 
 ;Variables
 
-;representaciones BCD	
-digito0 ds 1;	
-digito1 ds 1;	
-digito2 ds 1;
-digito3 ds 1;
-digito4 ds 1;
-digito5 ds 1;
-digito6 ds 1;
-digito7 ds 1;
-digito8 ds 1;
-digito9 ds 1;
 
 ;lo que se muestra en los 7 segmentos
-numero1 ds 1;
+numero1 ds 1;				Display Segundos
 numero2 ds 1;
-numero3 ds 1;
-numero4 ds 1;
+numero3 ds 1;				Display Minutos
+numero4 ds 1;				
 
-ciclo ds 1 ;				;para el delay del multiplexado
-contadorencendido ds 1;		;determina si el cronometro funciona o no
-puntito ds 1;
-contadorloopmux ds 1;
+ciclo ds 1 ;				;Determina el delay del multiplexado
+contadorencendido ds 1;		;Determina si el cronometro esta encendido o no.
+puntito ds 1;				;Determina si habra un punto cada segundo
+contadorloopmux ds 1;		;Determina el delay del reset	
 
 ; code section
 MyCode:     SECTION
+;constantes
+;representaciones de los digitos 0-9	
+digito0 dc %10111110	
+digito1 dc %00000110	
+digito2 dc %11011010
+digito3 dc %11001110
+digito4 dc %01100110
+digito5 dc %11101100
+digito6 dc %11111100
+digito7 dc %10000110
+digito8 dc %11111110
+digito9 dc %11101110
 main:
 _Startup:
             LDHX   #__SEG_END_SSTACK ; initialize the stack pointer
@@ -56,90 +57,73 @@ _Startup:
             ; Insert your code here
 
 			
-			LDA #%11111111
+			LDA #%11111111	;Se cargan todos 1 en el registro A para habilitar configuraciones.
 			
 			;Se habilitan los puertos A y B como salidas al tener un "1"
+			;En el puerto A se ecuentran los Decodificadores y en el B el display
 			STA PTADD				;*** PTADD - Port A Data Direction Register; 0x00000001 ***
 			STA PTBDD				;*** PTBDD - Port B Data Direction Register; 0x00000003 ***
 			
-			;Se habilitan los puertos A y B como Pull up o Pull Down al tener un "1"
+			;Se habilitan los puertos A y B como Pull up o Pull Down al tener un "1", los display incialmente estan apagados.
 			STA PTAPE				;*** PTAPE - Port A Pull Enable Register; 0x00001840 ***
 			STA PTBPE				;*** PTBPE - Port B Pull Enable Register; 0x00001848 ***
 
-			LDA #%11110001
-			;Se habilitan el bit0 como salida ya que es el buzzer y los bit1 al 3 seran entradas ("0") para los switchs.			
-			STA PTCDD				;*** PTCDD - Port C Data Direction Register; 0x00000005 ***
+			;Se habilita los registros B como Lectura, en el caso de que no se le envie una nueva se al mantendra la anterior.
+			STA PTBD				;*** PTBD - Port B Data Register; 0x00000002 ***
 			
-            LDA #%11111111
-            STA PTBD				;*** PTBD - Port B Data Register; 0x00000002 ***
-            
-            ;Guarda cada digito para su formato en BCD
-            LDA #%10111110
-            STA digito0
-            LDA #%00000110
-            STA digito1
-            LDA #%11011010
-            STA digito2
-            LDA #%11001110
-            STA digito3
-            LDA #%01100110
-            STA digito4
-            LDA #%11101100
-            STA digito5
-            LDA #%11111100
-            STA digito6
-            LDA #%10000110
-            STA digito7
-            LDA #%11111110
-            STA digito8
-            LDA #%11101110
-            STA digito9 
+			LDA #%11110001
+			;Se habilitan el bit0 del puerto C como salida ya que es el buzzer y los bit1 al 3 seran entradas ("0") para los switchs.			
+			STA PTCDD				;*** PTCDD - Port C Data Direction Register; 0x00000005 ***
+			         
             
             ;Setea los contadores en cero
 			LDA #$0
 			STA numero1
-			LDA #$0
 			STA numero2
-			LDA #$0
 			STA numero3
-			LDA #$0
 			STA numero4
 
-			;El controlador RTC, es posible habilitarlo con el bit4 = "1", los 4 bits menos
-			;significativos determinan el tiempo de interrupcion
+			;El controlador RTC, con el bit4 = "1" habilitamos el RTIE (La habilitacion de Interrupcion en Tiempo Real)
+			;los 4 bits menos significativos determinan el tiempo de interrupcion
 			;1111 = 1 seg
 			;1110 = 0.5 seg
 			;1101 = 0.1 seg
 			;1100 = 16 mseg .... etc.
-            LDA #%00011111
-            STA RTCSC
+            LDA #%00011111	;Seteamos en 1 segundo
+            STA RTCSC   	;*** RTCSC - RTC Status and Control Register; 0x0000006C ***
             
-            ;El contador inicia apagado
+            ;El contador inicia apagado y sin punto.
             CLR contadorencendido
             CLR puntito
 
 mainLoop:
-			JSR botones ;evalua los switch
-			JSR multiplexado	;mostrar
-			
+			JSR botones 		;evalua los switch
+			JSR multiplexado	;muestra los valores en los displays
 			BRA    mainLoop
 
 
 multiplexado
 
 			LDA #%00000000
-			STA PTAD
-			LDX #digito0	;me ubico en la representacion del 0
-			TXA
+			STA PTAD		;Seleciono el deco 00 o el display de los segundos
+			
+			
+			;LDA #digito0
+			;ADD numero1
+			;STA PTBD
+			;JSR delay	
+			
+			LDHX #digito0	;me ubico en la representacion del 0
+			TXA				;Carga la posicion en A=00XX
 			ADD numero1		;me desplazo hacia la representacion del numero que se quiere mostrar
-			TAX
-			LDA 0,x
+			TAX				;X=XX+numero1
+			LDA 0,x			;A=0+X
 			STA PTBD		;muestra la unidad de segundo
 			JSR delay
 
 			LDA #%0000001
 			STA PTAD
-			LDX #digito0	;me ubico en la representacion del 0
+			LDHX #digito0	;me ubico en la representacion del 0
 			TXA
 			ADD numero2		;me desplazo hacia la representacion del numero que se quiere mostrar
 			TAX
@@ -149,7 +133,7 @@ multiplexado
 	
 			LDA #%00000010
 			STA PTAD
-			LDX #digito0	;me ubico en la representacion del 0
+			LDHX #digito0	;me ubico en la representacion del 0
 			TXA
 			ADD numero3		;me desplazo hacia la representacion del numero que se quiere mostrar
 			TAX
@@ -159,10 +143,10 @@ multiplexado
 			INCA			;le suma un puntito
 nopuntito	STA PTBD		;muestra la unidad de minuto
 			JSR delay
-	
+
 			LDA #%00000011
 			STA PTAD
-			LDX #digito0	;me ubico en la representacion del 0
+			LDHX #digito0	;me ubico en la representacion del 0
 			TXA
 			ADD numero4		;me desplazo hacia la representacion del numero que se quiere mostrar
 			TAX
@@ -170,22 +154,24 @@ nopuntito	STA PTBD		;muestra la unidad de minuto
 			STA PTBD		;muestra la decima de minuto
 			JSR delay
 			
-            RTS
+            RTS				;Vuelve al main loop y a registrar los botones
 
 ;Velocidad del multiplexado
 delay:
-			LDA #1
-			STA ciclo
+			LDA #1			
+			STA ciclo		;Habilita el delay
 			
-vol         feed_watchdog
-			LDA #10
-			LDHX #25
-leep		DBNZX leep
-			DBNZA leep
-			DEC ciclo
-			BNE vol
-			RTS
-
+vol         feed_watchdog	;En caso de que no regrese por errores de software se reinician los registros
+			LDA #10			;Carga 10 hexa en A
+			LDHX #25		;Carga 2526 hexa en X
+leep		DBNZX leep		;Decrementa y queda en loop hasta que X=0
+			DBNZA leep		;Decrementa ,y vuelve X a FFFF
+			DEC ciclo		;Apaga el delay
+			BNE vol			;Si no se apaga, se fuerza el apagado
+			RTS				;Retorna desde donde se llamo (en este caso el Multiplexado)
+			
+			;aproximadamente 2859075 ciclos de clock que a 40MHZ equivalen a 0.0714 segundos
+				
 ;Evaluacion de switch
 botones 
 	
@@ -267,7 +253,7 @@ numeritos
 	
 fin	RTI
 
-;ubicacion de la interrupcion en RAM -------????????????? CREO NO SE	
+;ubicacion de la interrupcion en ROM	
 	org Vrtc
 	dcw interrupcion
 	
